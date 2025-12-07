@@ -1,14 +1,11 @@
-
-
 import numpy as np
 import torch
 import math
 import matplotlib.pyplot as plt
 
 
-def ppca(X, n_components=16):
+def ppca(X, d=16):
     n, m = X.shape
-    d = n_components
 
     mean = X.mean(axis=0)                                   # (m)
 
@@ -32,17 +29,16 @@ def ppca(X, n_components=16):
     return W, mean, M
 
 
-def generate_dataset(path='./data/faces_vae.npy', noise=0.0):
-    X = torch.tensor(np.load(path)).flatten(start_dim=1) / 255  # (n_samples, x_dim)
-
-    return (1 - noise) * X + noise * torch.randn_like(X)
+def add_noise(X, percent=0.0):
+    return (1 - percent) * X + percent * torch.randn_like(X)
 
 
 if __name__ == '__main__':
-    X = generate_dataset('./data/faces_vae.npy', noise=0.3).numpy()
+    X = torch.tensor(np.load('./data/faces_vae.npy')).flatten(start_dim=1) / 255
+    X = add_noise(X, percent=0.5).numpy()
     d = 8
 
-    W, mean, M = ppca(X, n_components=d)
+    W, mean, M = ppca(X, d)
 
     print(f'W: {W.shape}')
     print(f'μ: {mean.shape}')
