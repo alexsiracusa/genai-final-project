@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import math
 import matplotlib.pyplot as plt
+import math
 
 
 def ppca(X, d=16):
@@ -33,9 +34,29 @@ def add_noise(X, percent=0.0):
     return (1 - percent) * X + percent * torch.randn_like(X)
 
 
+def display_images(images, clip=True):
+    # images (num_images, rows, cols)
+    size = math.ceil(math.sqrt(images.shape[0]))
+    fig, axes = plt.subplots(size, size, figsize=(size, size), facecolor="black")
+
+    for i, ax in enumerate(axes.flat):
+        ax.axis('off')
+        if i >= images.shape[0]:
+            continue
+        ax.imshow(images[i], cmap='gray', interpolation='nearest',
+            vmin=0 if clip else None,
+            vmax=1 if clip else None,
+        )
+
+    plt.tight_layout()
+    plt.show()
+    fig.clf()
+    plt.clf()
+
+
 if __name__ == '__main__':
     X = torch.tensor(np.load('./data/faces_vae.npy')).flatten(start_dim=1) / 255
-    X = add_noise(X, percent=0.5).numpy()
+    X = add_noise(X, percent=0.7).numpy()
     d = 8
 
     W, mean, M = ppca(X, d)
@@ -45,23 +66,18 @@ if __name__ == '__main__':
     print(f'M: {M.shape}')
 
     # Generate images to ensure PPCA is working
-    n_images = 25
+    n_images = 9
 
     Z_generated = np.random.standard_normal(size=(d, n_images))
     X_generated = (W @ Z_generated).T + mean
     images = X_generated.reshape((n_images, 24, 24))
 
-    size = int(math.sqrt(n_images))
-    fig, axes = plt.subplots(size, size, figsize=(size, size), facecolor="black")
+    display_images(images)
 
-    for i, ax in enumerate(axes.flat):
-        ax.imshow(images[i], cmap='gray', interpolation='nearest', vmin=0, vmax=1)
-        ax.axis('off')
+    ppca_images = np.insert(W.T, int(d/2), mean, axis=0).reshape(-1, 24, 24)
+    display_images(ppca_images, clip=False)
 
-    plt.tight_layout()
-    plt.show()
-    fig.clf()
-    plt.clf()
+    display_images(X[:9].reshape(9, 24, 24))
 
 
 
