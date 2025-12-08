@@ -23,18 +23,21 @@ test_loader  = DataLoader(test_dataset,  batch_size=batch_size, shuffle=False)
 
 # Define model
 model = nn.Sequential(
-    nn.Linear(5184, 1024),
+    nn.Linear(5184, 256),
     nn.ReLU(),
-    nn.Linear(1024, 256),
+    nn.Linear(256, 128),
     nn.ReLU(),
-    nn.Linear(256, 1),
+    nn.Linear(128, 1),
 )
-
+print(f"Trainable: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
 
 criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 for epoch in range(epochs):
+    model.train()
+    epoch_loss = 0
+
     for Ws, Means, noises in train_loader:
         input = torch.cat((Ws.flatten(start_dim=1), Means), dim=1).type(torch.float32)
         out = model(input)
@@ -43,23 +46,22 @@ for epoch in range(epochs):
         loss = criterion(out, noises.view(-1, 1))
         loss.backward()
         optimizer.step()
+        epoch_loss += loss.item() * Ws.size(0)
 
-        print(f"Loss: {loss.item():.4f}")
+    epoch_loss /= train_size
+    print(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss:.6f}")
 
 
 # Evaluate model
 model.eval()
-total_loss = 0.0
-count = 0
-
+test_loss = 0
 with torch.no_grad():
     for Ws, Means, noises in test_loader:
         input = torch.cat((Ws.flatten(start_dim=1), Means), dim=1).type(torch.float32)
         out = model(input)
         loss = criterion(out, noises)
+        test_loss += loss.item() * Ws.size(0)
 
-        total_loss += loss.item() * Ws.size(0)
-        count += Ws.size(0)
-
-print(f"Test Loss: {total_loss / count}")
+test_loss /= test_size
+print(f"Test Loss: {test_loss:.6f}")
 
