@@ -58,7 +58,7 @@ def generate_faces_dataset():
             "Means": Means_all,
             "noises": noises_all,
         },
-        "./data/faces_dataset.pt",
+        "../data/faces_dataset.pt",
     )
 
 

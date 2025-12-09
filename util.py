@@ -55,7 +55,7 @@ def display_images(images, clip=True):
 
 
 if __name__ == '__main__':
-    X = torch.tensor(np.load('./data/faces_vae.npy')).flatten(start_dim=1) / 255
+    X = torch.tensor(np.load('../data/faces_vae.npy')).flatten(start_dim=1) / 255
     X = add_noise(X, percent=0.7).numpy()
     d = 8
 
