@@ -55,7 +55,7 @@ def display_images(images, clip=True):
 
 
 if __name__ == '__main__':
-    X = torch.tensor(np.load('../data/faces_vae.npy')).flatten(start_dim=1) / 255
+    X = torch.tensor(np.load('./faces/data/faces_vae.npy')).flatten(start_dim=1) / 255
     X = add_noise(X, percent=0.7).numpy()
     d = 8
 
@@ -78,6 +78,28 @@ if __name__ == '__main__':
     display_images(ppca_images, clip=False)
 
     display_images(X[:9].reshape(9, 24, 24))
+
+
+    # Code to load cifar10 dataset instead
+    # import torchvision
+    # import torchvision.transforms as transforms
+    # from torch.utils.data import DataLoader
+    # from cifar10.generate_datasets import sample_proportions
+    #
+    # transform = transforms.Compose([
+    #     transforms.ToTensor(),
+    #     transforms.Resize((24, 24)),
+    #     transforms.Grayscale(),
+    #     transforms.Normalize(0.5, 1)
+    # ])
+    #
+    # # Load the training dataset
+    # dataset = torchvision.datasets.CIFAR10(root='./cifar10/data', train=True, download=True, transform=transform)
+    # loader = DataLoader(dataset, batch_size=len(dataset))
+    #
+    # X_torch, y_torch = next(iter(loader))
+    # X = X_torch.numpy().reshape(X_torch.shape[0], -1)
+    # y = y_torch.numpy()
 
 
 
