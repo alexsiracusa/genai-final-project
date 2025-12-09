@@ -30,7 +30,7 @@ learning_rate = 1e-4
 seq_len = 9
 
 num_layers = 2
-hidden_size = 512
+hidden_size = 585
 
 # Train test split
 dataset = NoisyFaceDataset(X, seq_len=seq_len)
