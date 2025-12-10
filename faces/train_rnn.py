@@ -4,6 +4,8 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 from util import add_noise
+from scipy.stats import pearsonr
+import matplotlib.pyplot as plt
 
 
 X = torch.tensor(np.load('./data/faces_vae.npy')).flatten(start_dim=1) / 255
@@ -61,7 +63,8 @@ input_size = X.shape[1]
 model = NoiseRNN(input_size, hidden_size, num_layers)
 print(f"Trainable: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
 
-criterion = nn.BCEWithLogitsLoss()
+# criterion = nn.BCEWithLogitsLoss()
+criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 # Training loop
@@ -84,13 +87,27 @@ for epoch in range(epochs):
 
 # Test loss
 model.eval()
+model.eval()
 test_loss = 0
+y = np.array([], dtype=float)
+y_hat = np.array([], dtype=float)
+
 with torch.no_grad():
     for seqs, targets in test_loader:
         outputs = model(seqs)
         loss = criterion(outputs.view(-1, 1), targets)
         test_loss += loss.item() * seqs.size(0)
 
+        y = np.concatenate((y, targets.detach().numpy().flatten()))
+        y_hat = np.concatenate((y_hat, torch.sigmoid(outputs).detach().numpy().flatten()))
+
 test_loss /= test_size
 print(f"Test Loss: {test_loss:.6f}")
+
+correlation_coefficient, p_value = pearsonr(y, y_hat)
+print(f"Correlation coefficient: {correlation_coefficient:.6f}")
+print(f"p-value: {p_value}")
+
+plt.scatter(y, y_hat)
+plt.show()
 

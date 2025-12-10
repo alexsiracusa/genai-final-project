@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, random_split
+from scipy.stats import pearsonr
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 # Hyperparameters
@@ -31,7 +34,8 @@ model = nn.Sequential(
 )
 print(f"Trainable: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
 
-criterion = nn.BCEWithLogitsLoss()
+# criterion = nn.BCEWithLogitsLoss()
+criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 for epoch in range(epochs):
@@ -55,6 +59,9 @@ for epoch in range(epochs):
 # Evaluate model
 model.eval()
 test_loss = 0
+y = np.array([], dtype=float)
+y_hat = np.array([], dtype=float)
+
 with torch.no_grad():
     for Ws, Means, noises in test_loader:
         input = torch.cat((Ws.flatten(start_dim=1), Means), dim=1).type(torch.float32)
@@ -62,6 +69,16 @@ with torch.no_grad():
         loss = criterion(out, noises)
         test_loss += loss.item() * Ws.size(0)
 
+        y = np.concatenate((y, noises.detach().numpy().flatten()))
+        y_hat = np.concatenate((y_hat, torch.sigmoid(out).detach().numpy().flatten()))
+
 test_loss /= test_size
 print(f"Test Loss: {test_loss:.6f}")
+
+correlation_coefficient, p_value = pearsonr(y, y_hat)
+print(f"Correlation coefficient: {correlation_coefficient:.6f}")
+print(f"p-value: {p_value}")
+
+plt.scatter(y, y_hat)
+plt.show()
 
